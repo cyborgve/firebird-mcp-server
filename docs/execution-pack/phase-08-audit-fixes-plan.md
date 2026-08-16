@@ -1,78 +1,78 @@
-# Phase 08: Audit Fixes — Corrección de Errores, Inconsistencias y Mejoras
+# Phase 08: Audit Fixes — Bug Fixes, Inconsistencies, and Improvements
 
-Basado en auditoría integral del código fuente. Cada ítem incluye archivos, línea, diagnóstico y acción concreta.
+Based on a comprehensive audit of the source code. Each item includes the file, line, diagnosis, and concrete action.
 
 ---
 
-## 1. 🔴 Errores / Bugs
+## 1. 🔴 Errors / Bugs
 
-### 1.1 Logger redacta datos operativos legítimos (host, port, database, user)
+### 1.1 Logger redacts legitimate operational data (host, port, database, user)
 
-**Archivo:** `src/logging/logger.ts:28`
+**File:** `src/logging/logger.ts:28`
 
-**Diagnóstico:** La regex `SENSITIVE_KEY_PATTERN` incluye `host`, `port`, `database`, `user`, `firebird`, que no son secretos. Cada log que incluya estas claves (ej. `server.ts:233`) mostrará `[REDACTED]`, imposibilitando la depuración en producción.
+**Diagnosis:** The `SENSITIVE_KEY_PATTERN` regex includes `host`, `port`, `database`, `user`, `firebird`, which are not secrets. Any log containing these keys (e.g., `server.ts:233`) will show `[REDACTED]`, making production debugging impossible.
 
-**Acción:** Separar claves verdaderamente sensibles de las operativas:
+**Action:** Separate truly sensitive keys from operational ones:
 
 ```ts
 const SENSITIVE_KEY_PATTERN = /(password|secret|token|authorization|api[_-]?key|credential)/i;
 ```
 
-**Prueba:** `src/logging/logger.test.ts` debe verificar que `host`, `port`, `database` NO son redactados.
+**Test:** `src/logging/logger.test.ts` must verify that `host`, `port`, and `database` are NOT redacted.
 
 ---
 
-### 1.2 Versiones de protocolo MCP incorrectas
+### 1.2 Incorrect MCP protocol versions
 
-**Archivo:** `src/mcp/protocol-version.ts:1-6`
+**File:** `src/mcp/protocol-version.ts:1-6`
 
-**Diagnóstico:** Las versiones `2025-06-18` y `2025-11-25` no forman parte del estándar MCP oficial. Las versiones correctas son `2024-11-05` y `2025-03-26`. Esto causará fallos de handshake con Claude Desktop y otros clientes reales.
+**Diagnosis:** Versions `2025-06-18` and `2025-11-25` are not part of the official MCP standard. The correct versions are `2024-11-05` and `2025-03-26`. This will cause handshake failures with Claude Desktop and other real clients.
 
-**Acción:**
+**Action:**
 
 ```ts
 export const DEFAULT_PROTOCOL_VERSION = '2025-03-26';
 export const SUPPORTED_PROTOCOL_VERSIONS = ['2025-03-26', '2024-11-05'] as const;
 ```
 
-**Archivos afectados:**
-- `src/mcp/protocol-version.ts` — cambiar constantes
-- `src/vscode/mcp-process-manager.ts:502` — actualizar `protocolVersion: '2025-06-18'` a `'2025-03-26'`
-- `README.md`, `docs/*.md` — actualizar referencias a versiones
+**Affected files:**
+- `src/mcp/protocol-version.ts` — update constants
+- `src/vscode/mcp-process-manager.ts:502` — update `protocolVersion: '2025-06-18'` to `'2025-03-26'`
+- `README.md`, `docs/*.md` — update version references
 
-**Prueba:** `src/mcp/mcp-server.test.ts` — los tests que verifican handshake deben pasar con las nuevas versiones.
+**Test:** `src/mcp/mcp-server.test.ts` — tests verifying the handshake must pass with the new versions.
 
 ---
 
-### 1.3 `MCP_READ_ONLY` y `MCP_INSIDERS` no tienen efecto
+### 1.3 `MCP_READ_ONLY` and `MCP_INSIDERS` have no effect
 
-**Archivos:** `src/vscode/mcp-process-manager.ts:106-107` → `src/config/env-config.ts`
+**Files:** `src/vscode/mcp-process-manager.ts:106-107` → `src/config/env-config.ts`
 
-**Diagnóstico:** La extensión VS Code inyecta `MCP_READ_ONLY` y `MCP_INSIDERS` al entorno, pero `env-config.ts` nunca los lee ni usa.
+**Diagnosis:** The VS Code extension injects `MCP_READ_ONLY` and `MCP_INSIDERS` into the environment, but `env-config.ts` never reads or uses them.
 
-**Acción:** Implementar lectura en `env-config.ts`:
+**Action:** Implement reading in `env-config.ts`:
 
 ```ts
-// Agregar a RuntimeConfig
+// Add to RuntimeConfig
 readOnly: boolean;
 
-// Agregar en getRuntimeConfig()
+// Add to getRuntimeConfig()
 readOnly: toBoolean(process.env.MCP_READ_ONLY, false),
 ```
 
-O bien eliminar el envío desde `mcp-process-manager.ts` si no hay intención de usarlo.
+Alternatively, remove the variables from `mcp-process-manager.ts` if there is no intent to use them.
 
-**Prueba:** `src/config/env-config.test.ts` debe validar parsing de `MCP_READ_ONLY`.
+**Test:** `src/config/env-config.test.ts` must validate the parsing of `MCP_READ_ONLY`.
 
 ---
 
-### 1.4 `commitlint.config.js` incompatible con `@commitlint/config-conventional` v20+
+### 1.4 `commitlint.config.js` incompatible with `@commitlint/config-conventional` v20+
 
-**Archivo:** `commitlint.config.js`
+**File:** `commitlint.config.js`
 
-**Diagnóstico:** `@commitlint/config-conventional` v20+ es ESM-only, pero el archivo usa `module.exports` (CommonJS).
+**Diagnosis:** `@commitlint/config-conventional` v20+ is ESM-only, but the file uses `module.exports` (CommonJS).
 
-**Acción:** Renombrar a `commitlint.config.mjs` con sintaxis ESM:
+**Action:** Rename to `commitlint.config.mjs` with ESM syntax:
 
 ```mjs
 export default {
@@ -80,31 +80,31 @@ export default {
 };
 ```
 
-**Prueba:** Ejecutar `pnpm commit` o `echo "test: foo" | pnpm commitlint`.
+**Test:** Run `pnpm commit` or `echo "test: foo" | pnpm commitlint`.
 
 ---
 
-### 1.5 Posible incompatibilidad Zod v4
+### 1.5 Possible Zod v4 incompatibility
 
-**Archivo:** `package.json:172`, `src/dtos/tool-schemas.ts`
+**File:** `package.json:172`, `src/dtos/tool-schemas.ts`
 
-**Diagnóstico:** `zod` `^4.3.6` instalado pero el código usa APIs de Zod v3 (`.nonempty()` y otras). Zod v4 tiene breaking changes significativos.
+**Diagnosis:** `zod` `^4.3.6` is installed but the code uses Zod v3 APIs (`.nonempty()` and others). Zod v4 has significant breaking changes.
 
-**Acción:** Verificar si los tests pasan con Zod v4 actual. Si fallan, dos opciones:
-- **Opción A:** Fijar `zod` a `^3.23.8` (recomendada si el código usa APIs v3)
-- **Opción B:** Migrar a Zod v4 (requiere revisar cada schema)
+**Action:** Verify if tests pass with the current Zod v4. If they fail, there are two options:
+- **Option A:** Pin `zod` to `^3.23.8` (recommended if the code uses v3 APIs)
+- **Option B:** Migrate to Zod v4 (requires reviewing each schema)
 
-**Prueba:** `pnpm test` debe pasar sin errores.
+**Test:** `pnpm test` must pass without errors.
 
 ---
 
-### 1.6 `mapFieldType` produce `NUMERIC(x, 0)` incorrecto
+### 1.6 `mapFieldType` incorrectly produces `NUMERIC(x, 0)`
 
-**Archivo:** `src/db/firebird/firebird-adapter.ts:448-455`
+**File:** `src/db/firebird/firebird-adapter.ts:448-455`
 
-**Diagnóstico:** Cuando `fieldSubType > 0` pero `fieldScale === 0`, la condición `fieldScale` es falsy y trata el tipo como SMALLINT/INTEGER en lugar de NUMERIC.
+**Diagnosis:** When `fieldSubType > 0` but `fieldScale === 0`, the `fieldScale` condition is falsy and treats the type as SMALLINT/INTEGER instead of NUMERIC.
 
-**Acción:** Cambiar la condición a `fieldSubType !== null && fieldSubType > 0 && fieldScale !== null`:
+**Action:** Change the condition to `fieldSubType !== null && fieldSubType > 0 && fieldScale !== null`:
 
 ```ts
 case 7:
@@ -122,17 +122,17 @@ case 16:
   return 'BIGINT';
 ```
 
-**Pruebas:** Agregar test que verifique que escala 0 con subType > 0 produce NUMERIC y no SMALLINT/INTEGER.
+**Tests:** Add a test verifying that scale 0 with subType > 0 produces NUMERIC and not SMALLINT/INTEGER.
 
 ---
 
-### 1.7 HTTP transport sin graceful shutdown en `close`
+### 1.7 HTTP transport lacks graceful shutdown on `close`
 
-**Archivo:** `src/server.ts:198`
+**File:** `src/server.ts:198`
 
-**Diagnóstico:** En modo HTTP, `lineReader` es `undefined`, por lo que el evento `close` del stdin nunca se registra. HTTP solo puede shut down por SIGINT/SIGTERM.
+**Diagnosis:** In HTTP mode, `lineReader` is `undefined`, so the `close` event from stdin is never registered. HTTP can only shut down via SIGINT/SIGTERM.
 
-**Acción:** Agregar listener de evento `close` en el servidor HTTP:
+**Action:** Add a `close` event listener to the HTTP server:
 
 ```ts
 if (httpServer) {
@@ -144,31 +144,31 @@ if (httpServer) {
 
 ---
 
-## 2. 🟡 Inconsistencias
+## 2. 🟡 Inconsistencies
 
-### 2.1 `MCP_TOOLSET` legacy redundante
+### 2.1 Redundant legacy `MCP_TOOLSET`
 
-**Archivo:** `src/config/env-config.ts:248-252`
+**File:** `src/config/env-config.ts:248-252`
 
-**Diagnóstico:** Se leen ambas variables `MCP_TOOLSET` y `MCP_TOOLSETS` con lógica de merge, sin documentación.
+**Diagnosis:** Both `MCP_TOOLSET` and `MCP_TOOLSETS` variables are read with merge logic, without documentation.
 
-**Acción:** Eliminar soporte de `MCP_TOOLSET` (singular) y documentar `MCP_TOOLSETS` como única variable:
+**Action:** Remove support for `MCP_TOOLSET` (singular) and document `MCP_TOOLSETS` as the sole variable:
 
 ```ts
 const toolsets = toStringList(process.env.MCP_TOOLSETS);
 ```
 
-**Prueba:** `src/config/env-config.test.ts` debe actualizarse.
+**Test:** `src/config/env-config.test.ts` must be updated.
 
 ---
 
-### 2.2 `FIREBIRD_ROLE` no expuesto en extensión VS Code
+### 2.2 `FIREBIRD_ROLE` not exposed in VS Code extension
 
-**Archivo:** `package.json:57-119`
+**File:** `package.json:57-119`
 
-**Diagnóstico:** El servidor soporta `FIREBIRD_ROLE`, pero la configuración de la extensión no expone este campo.
+**Diagnosis:** The server supports `FIREBIRD_ROLE`, but the extension configuration does not expose this field.
 
-**Acción:** Agregar propiedad `firebirdMcp.role` en `contributes.configuration.properties`:
+**Action:** Add the `firebirdMcp.role` property to `contributes.configuration.properties`:
 
 ```json
 "firebirdMcp.role": {
@@ -177,25 +177,25 @@ const toolsets = toStringList(process.env.MCP_TOOLSETS);
 }
 ```
 
-Y actualizar `ExtensionConfig` en `extension-types.ts` y `getExtensionConfig()` en `extension.ts`.
+And update `ExtensionConfig` in `extension-types.ts` and `getExtensionConfig()` in `extension.ts`.
 
 ---
 
-### 2.3 `executeQueryMode` no expuesto en extensión VS Code
+### 2.3 `executeQueryMode` not exposed in VS Code extension
 
-**Diagnóstico:** El servidor soporta `MCP_EXECUTE_QUERY_MODE` pero la extensión no lo expone.
+**Diagnosis:** The server supports `MCP_EXECUTE_QUERY_MODE` but the extension does not expose it.
 
-**Acción:** Agregar propiedad `firebirdMcp.executeQueryMode` en la configuración de la extensión.
+**Action:** Add the `firebirdMcp.executeQueryMode` property to the extension configuration.
 
 ---
 
-### 2.4 Duplicación de lógica de entorno entre `start()` y `testConnection()`
+### 2.4 Duplicated environment logic between `start()` and `testConnection()`
 
-**Archivo:** `src/vscode/mcp-process-manager.ts`
+**File:** `src/vscode/mcp-process-manager.ts`
 
-**Diagnóstico:** Ambos métodos construyen el mismo bloque `env` de ~20 líneas.
+**Diagnosis:** Both methods construct the same `env` block of ~20 lines.
 
-**Acción:** Extraer a método privado:
+**Action:** Extract to a private method:
 
 ```ts
 private buildEnv(config: ExtensionConfig, password: string): Record<string, string | undefined> {
@@ -216,13 +216,13 @@ private buildEnv(config: ExtensionConfig, password: string): Record<string, stri
 
 ---
 
-## 3. 🟢 Mejoras
+## 3. 🟢 Improvements
 
-### 3.1 Validar contraseña no vacía en extensión
+### 3.1 Validate non-empty password in extension
 
-**Archivo:** `src/extension.ts:69-76`
+**File:** `src/extension.ts:69-76`
 
-**Acción:**
+**Action:**
 
 ```ts
 if (password && password.trim().length > 0) {
@@ -235,36 +235,36 @@ if (password && password.trim().length > 0) {
 
 ---
 
-### 3.2 Migrar de `standard-version` a `semantic-release`
+### 3.2 Migrate from `standard-version` to `semantic-release`
 
-**Archivo:** `package.json:165`, script `release`
+**File:** `package.json:165`, script `release`
 
-**Diagnóstico:** `standard-version` está deprecado (sin mantenimiento desde 2023).
+**Diagnosis:** `standard-version` is deprecated (unmaintained since 2023).
 
-**Acción:** Migrar a `semantic-release` o usar `release-it`:
+**Action:** Migrate to `semantic-release` or use `release-it`:
 
 ```bash
 pnpm remove standard-version
 pnpm add -D semantic-release
 ```
 
-Actualizar script `release` en `package.json`.
+Update the `release` script in `package.json`.
 
 ---
 
-### 3.3 SQL Validator: permitir `EXECUTE BLOCK` read-only
+### 3.3 SQL Validator: allow read-only `EXECUTE BLOCK`
 
-**Archivo:** `src/mcp/tools/sql-validator.ts:15`
+**File:** `src/mcp/tools/sql-validator.ts:15`
 
-**Acción:** `EXECUTE BLOCK` puede ser read-only. Si se quiere permitir, se debe analizar su contenido interno. Alternativa: agregar una lista de excepciones configurable.
+**Action:** `EXECUTE BLOCK` can be read-only. To allow it, its internal contents must be parsed. Alternative: add a configurable exceptions list.
 
 ---
 
-### 3.4 Actualizar `engines.vscode` y `@types/vscode`
+### 3.4 Update `engines.vscode` and `@types/vscode`
 
-**Archivo:** `package.json:10,154`
+**File:** `package.json:10,154`
 
-**Acción:** Actualizar a versiones más recientes:
+**Action:** Update to more recent versions:
 
 ```json
 "engines": {
@@ -277,56 +277,56 @@ Actualizar script `release` en `package.json`.
 
 ---
 
-### 3.5 Agregar progreso en probe de conexión
+### 3.5 Add progress to connection probe
 
-**Archivo:** `src/vscode/mcp-process-manager.ts:181-512`
+**File:** `src/vscode/mcp-process-manager.ts:181-512`
 
-**Acción:** Emitir eventos de progreso para que la UI muestre pasos: `handshake → tools/list → ping → list_tables → execute_query`.
-
----
-
-## 4. Orden de Ejecución Recomendado
-
-| Orden | Item | Esfuerzo | Impacto | Depende de |
-|-------|------|----------|---------|------------|
-| 1 | 1.2 — Versiones de protocolo MCP | Bajo | 🔴 Alto | — |
-| 2 | 1.3 — MCP_READ_ONLY sin efecto | Bajo | 🔴 Alto | — |
-| 3 | 1.1 — Logger redacta datos operativos | Bajo | 🔴 Alto | — |
-| 4 | 1.4 — commitlint ESM | Bajo | 🔴 Alto | — |
-| 5 | 1.5 — Zod v4 compatibilidad | Medio | 🔴 Alto | — |
-| 6 | 1.6 — mapFieldType escala cero | Bajo | 🔴 Bajo | — |
-| 7 | 2.4 — Refactor buildEnv | Bajo | 🟡 Medio | — |
-| 8 | 1.7 — HTTP shutdown | Bajo | 🟡 Medio | — |
-| 9 | 2.1 — MCP_TOOLSET legacy | Bajo | 🟡 Bajo | — |
-| 10 | 2.2 — FIREBIRD_ROLE en extensión | Bajo | 🟡 Bajo | — |
-| 11 | 2.3 — executeQueryMode en extensión | Bajo | 🟡 Bajo | — |
-| 12 | 3.1 — Validar contraseña vacía | Bajo | 🟢 Bajo | — |
-| 13 | 3.4 — Actualizar engines/tipos | Bajo | 🟢 Bajo | — |
-| 14 | 3.2 — Migrar de standard-version | Medio | 🟢 Bajo | — |
-| 15 | 3.5 — Progreso en probe | Medio | 🟢 Bajo | 2.4 |
-| 16 | 3.3 — EXECUTE BLOCK read-only | Alto | 🟢 Bajo | — |
+**Action:** Emit progress events so the UI displays steps: `handshake → tools/list → ping → list_tables → execute_query`.
 
 ---
 
-## 5. Criterios de Aceptación
+## 4. Recommended Execution Order
 
-- [ ] `pnpm test` pasa sin errores (vitest)
-- [ ] `pnpm lint` pasa sin errores (ESLint)
-- [ ] `pnpm build` produce `dist/` sin errores (TypeScript)
-- [ ] Logger no redacta host/port/database; sí redacta password/token
-- [ ] Las versiones de protocolo MCP son `2025-03-26` y `2024-11-05`
-- [ ] `MCP_READ_ONLY` en entorno se refleja en `RuntimeConfig`
-- [ ] `commitlint` funciona con `pnpm commit`
-- [ ] Zod v4 (o v3 fijado) es compatible con el código
-- [ ] `FirebirdRole` es configurable desde VS Code
-- [ ] `executeQueryMode` es configurable desde VS Code
-- [ ] No hay lógica duplicada de buildEnv entre `start()` y `testConnection()`
-- [ ] Contraseña vacía es rechazada en la extensión
-- [ ] `standard-version` reemplazado por alternativa mantenida
+| Order | Item | Effort | Impact | Depends on |
+|-------|------|--------|--------|------------|
+| 1 | 1.2 — MCP protocol versions | Low | 🔴 High | — |
+| 2 | 1.3 — Ineffective MCP_READ_ONLY | Low | 🔴 High | — |
+| 3 | 1.1 — Logger redacts operational data | Low | 🔴 High | — |
+| 4 | 1.4 — ESM commitlint | Low | 🔴 High | — |
+| 5 | 1.5 — Zod v4 compatibility | Medium | 🔴 High | — |
+| 6 | 1.6 — mapFieldType zero scale | Low | 🔴 Low | — |
+| 7 | 2.4 — Refactor buildEnv | Low | 🟡 Medium | — |
+| 8 | 1.7 — HTTP shutdown | Low | 🟡 Medium | — |
+| 9 | 2.1 — Legacy MCP_TOOLSET | Low | 🟡 Low | — |
+| 10 | 2.2 — FIREBIRD_ROLE in extension | Low | 🟡 Low | — |
+| 11 | 2.3 — executeQueryMode in extension | Low | 🟡 Low | — |
+| 12 | 3.1 — Empty password validation | Low | 🟢 Low | — |
+| 13 | 3.4 — Update engines/types | Low | 🟢 Low | — |
+| 14 | 3.2 — Migrate from standard-version | Medium | 🟢 Low | — |
+| 15 | 3.5 — Probe progress | Medium | 🟢 Low | 2.4 |
+| 16 | 3.3 — Read-only EXECUTE BLOCK | High | 🟢 Low | — |
 
 ---
 
-## 6. Comandos de Verificación
+## 5. Acceptance Criteria
+
+- [ ] `pnpm test` passes without errors (vitest)
+- [ ] `pnpm lint` passes without errors (ESLint)
+- [ ] `pnpm build` produces `dist/` without errors (TypeScript)
+- [ ] Logger does not redact host/port/database; it does redact password/token
+- [ ] MCP protocol versions are `2025-03-26` and `2024-11-05`
+- [ ] `MCP_READ_ONLY` in environment is reflected in `RuntimeConfig`
+- [ ] `commitlint` works with `pnpm commit`
+- [ ] Zod v4 (or pinned v3) is compatible with the code
+- [ ] `FirebirdRole` is configurable from VS Code
+- [ ] `executeQueryMode` is configurable from VS Code
+- [ ] No duplicated buildEnv logic between `start()` and `testConnection()`
+- [ ] Empty password is rejected in the extension
+- [ ] `standard-version` is replaced by a maintained alternative
+
+---
+
+## 6. Verification Commands
 
 ```bash
 # Tests
