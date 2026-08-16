@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "name": "Debug MCP Firebird",
+      "request": "launch",
+      "program": "${workspaceFolder}/dist/server.js",
+      "cwd": "${workspaceFolder}",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "chat.mcp.autostart": true,
+  "chat.mcp.serverSampling": {
+    "mcp-firebird/.vscode/mcp.json: mcp-firebird": {
+      "allowedModels": [
+        "copilot/gpt-5",
+        "copilot/gpt-5-mini",
+        "copilot/gpt-4.1"
+      ]
+    }
+  }
+}

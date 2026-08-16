@@ -1,0 +1,4 @@
+# This file is used to define the owners of the repository.
+# GitHub will automatically request reviews from these users when a Pull Request is opened.
+
+*       @INSERT_GITHUB_USERNAME_HERE

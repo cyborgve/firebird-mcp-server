@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vscode/main/extensions/mcp/schema.json",
+  "version": "1.0",
+  "servers": {
+    "firebird-mcp": {
+      "name": "Firebird MCP Server",
+      "type": "stdio",
+      "command": "node",
+      "args": ["${workspaceFolder}/dist/server.js"],
+      "env": {
+        "MCP_TRANSPORT": "stdio",
+        "FIREBIRD_HOST": "${env:FIREBIRD_HOST}",
+        "FIREBIRD_PORT": "${env:FIREBIRD_PORT}",
+        "FIREBIRD_DATABASE": "${env:FIREBIRD_DATABASE}",
+        "FIREBIRD_USER": "${env:FIREBIRD_USER}",
+        "FIREBIRD_PASSWORD": "${env:FIREBIRD_PASSWORD}",
+        "FIREBIRD_ROLE": "${env:FIREBIRD_ROLE}",
+        "FIREBIRD_CHARSET": "${env:FIREBIRD_CHARSET}"
+      }
+    }
+  }
+}

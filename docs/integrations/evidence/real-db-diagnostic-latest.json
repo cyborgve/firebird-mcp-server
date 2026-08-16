@@ -1,0 +1,101 @@
+{
+  "startedAt": "2026-03-13T08:58:43.448Z",
+  "protocol": "2025-06-18",
+  "checks": [
+    {
+      "name": "initialize",
+      "status": "passed",
+      "durationMs": 442,
+      "details": {
+        "server": "firebird-mcp-server",
+        "version": "0.2.0",
+        "protocolVersion": "2025-06-18"
+      }
+    },
+    {
+      "name": "tools/list",
+      "status": "passed",
+      "durationMs": 5,
+      "details": {
+        "toolCount": 10,
+        "hasExecuteQuery": true
+      }
+    },
+    {
+      "name": "tools/call server_status",
+      "status": "passed",
+      "durationMs": 100,
+      "details": {
+        "engineVersion": null
+      }
+    },
+    {
+      "name": "tools/call database_overview",
+      "status": "passed",
+      "durationMs": 308,
+      "details": {}
+    },
+    {
+      "name": "tools/call list_tables",
+      "status": "passed",
+      "durationMs": 23,
+      "details": {
+        "tableCount": 500,
+        "sample": [
+          "ACC_CIERRE_CAJA",
+          "ACC_CLIENTES_SALDOS",
+          "ACC_COMPRAS_DEPARTAMENTOS"
+        ]
+      }
+    },
+    {
+      "name": "tools/call get_table_schema(sample)",
+      "status": "passed",
+      "durationMs": 9,
+      "details": {
+        "table": "ACC_CIERRE_CAJA",
+        "columnCount": 0
+      }
+    },
+    {
+      "name": "tools/call execute_query(health)",
+      "status": "passed",
+      "durationMs": 7,
+      "details": {
+        "rowCount": 1,
+        "firstRow": {
+          "HEALTH": 1
+        }
+      }
+    },
+    {
+      "name": "tools/call list_indexes",
+      "status": "passed",
+      "durationMs": 157,
+      "details": {
+        "indexCount": 2422
+      }
+    },
+    {
+      "name": "tools/call list_constraints",
+      "status": "passed",
+      "durationMs": 232,
+      "details": {
+        "constraintCount": 7067
+      }
+    },
+    {
+      "name": "tools/call execute_query(mutation blocked)",
+      "status": "passed",
+      "durationMs": 24,
+      "details": {
+        "errorCode": -32003,
+        "errorMessage": "Read-only policy violation: only SELECT/CTE queries are allowed"
+      }
+    }
+  ],
+  "success": true,
+  "errors": [],
+  "finishedAt": "2026-03-13T08:58:44.757Z",
+  "stderrLineCount": 4
+}

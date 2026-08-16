@@ -1,0 +1,38 @@
+name: Bug Report
+description: Create a report to help us improve the MCP Server
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: input
+    id: version
+    attributes:
+      label: MCP Server Version
+      description: Which version of firebird-mcp-server are you using?
+      placeholder: e.g. 0.2.0
+    validations:
+      required: true
+  - type: input
+    id: firebird_version
+    attributes:
+      label: Firebird Database Version
+      description: Which version of Firebird are you running against?
+      placeholder: e.g. Firebird 3.0, 4.0
+    validations:
+      required: true
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: What happened?
+      description: Also tell us, what did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste any relevant log output or the raw error message.
+      render: shell

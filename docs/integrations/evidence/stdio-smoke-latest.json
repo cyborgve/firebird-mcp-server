@@ -1,0 +1,61 @@
+{
+  "startedAt": "2026-03-13T08:54:58.637Z",
+  "transport": "stdio",
+  "command": "node dist/server.js",
+  "checks": [
+    {
+      "name": "initialize",
+      "status": "passed",
+      "durationMs": 2351,
+      "details": {
+        "protocolVersion": "2025-06-18",
+        "serverName": "firebird-mcp-server"
+      }
+    },
+    {
+      "name": "tools/list",
+      "status": "passed",
+      "durationMs": 1,
+      "details": {
+        "totalTools": 10,
+        "requiredToolsPresent": true
+      }
+    },
+    {
+      "name": "tools/call ping",
+      "status": "passed",
+      "durationMs": 219,
+      "details": {
+        "hasContent": true,
+        "hasStructuredContent": true
+      }
+    },
+    {
+      "name": "tools/call list_tables",
+      "status": "passed",
+      "durationMs": 56,
+      "details": {
+        "hasContent": true,
+        "tableCount": 500
+      }
+    },
+    {
+      "name": "tools/call execute_query mutation blocked",
+      "status": "passed",
+      "durationMs": 4,
+      "details": {
+        "errorCode": -32003,
+        "errorMessage": "Read-only policy violation: only SELECT/CTE queries are allowed"
+      }
+    }
+  ],
+  "success": true,
+  "errors": [],
+  "finishedAt": "2026-03-13T08:55:01.296Z",
+  "stdoutLineCount": 5,
+  "stderrLineCount": 4,
+  "processExit": {
+    "code": null,
+    "signal": "SIGINT"
+  }
+}

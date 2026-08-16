@@ -1,0 +1,188 @@
+{
+  "name": "firebird-mcp-server",
+  "version": "0.2.0",
+  "private": false,
+  "description": "TypeScript MCP server with FirebirdSQL backend",
+  "publisher": "firebird-mcp",
+  "packageManager": "pnpm@10.5.2",
+  "engines": {
+    "node": ">=24.0.0",
+    "vscode": "^1.93.0"
+  },
+  "main": "dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:firebirdMcp.startServer",
+    "onCommand:firebirdMcp.stopServer",
+    "onCommand:firebirdMcp.serverStatus",
+    "onCommand:firebirdMcp.setPassword",
+    "onCommand:firebirdMcp.testConnection",
+    "onCommand:firebirdMcp.testConnectionExtended"
+  ],
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "mcp",
+    "firebird",
+    "database"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "firebirdMcp.startServer",
+        "title": "Start Firebird MCP Server"
+      },
+      {
+        "command": "firebirdMcp.stopServer",
+        "title": "Stop Firebird MCP Server"
+      },
+      {
+        "command": "firebirdMcp.serverStatus",
+        "title": "Firebird MCP Server Status"
+      },
+      {
+        "command": "firebirdMcp.setPassword",
+        "title": "Set Firebird Password"
+      },
+      {
+        "command": "firebirdMcp.testConnection",
+        "title": "Test Firebird MCP Connection"
+      },
+      {
+        "command": "firebirdMcp.testConnectionExtended",
+        "title": "Test Firebird MCP Connection (Extended)"
+      }
+    ],
+    "configuration": {
+      "title": "Firebird MCP",
+      "properties": {
+        "firebirdMcp.role": {
+          "type": "string",
+          "description": "Firebird SQL role for the connection"
+        },
+        "firebirdMcp.executeQueryMode": {
+          "type": "string",
+          "enum": [
+            "safe",
+            "ad-hoc"
+          ],
+          "default": "safe",
+          "description": "SQL execution mode: safe (read-only enforced) or ad-hoc"
+        },
+        "firebirdMcp.host": {
+          "type": "string",
+          "default": "localhost",
+          "description": "Firebird database host"
+        },
+        "firebirdMcp.database": {
+          "type": "string",
+          "description": "Firebird database path or alias"
+        },
+        "firebirdMcp.port": {
+          "type": "number",
+          "default": 3050,
+          "description": "Firebird database port"
+        },
+        "firebirdMcp.user": {
+          "type": "string",
+          "default": "SYSDBA",
+          "description": "Firebird database user"
+        },
+        "firebirdMcp.readOnly": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable read-only mode"
+        },
+        "firebirdMcp.insiders": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable insiders features"
+        },
+        "firebirdMcp.toolsets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Enabled toolsets"
+        },
+        "firebirdMcp.tools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Enabled tools"
+        },
+        "firebirdMcp.logLevel": {
+          "type": "string",
+          "enum": [
+            "error",
+            "warn",
+            "info",
+            "debug"
+          ],
+          "default": "info",
+          "description": "Log level"
+        },
+        "firebirdMcp.autoStart": {
+          "type": "boolean",
+          "default": false,
+          "description": "Auto-start the MCP server on extension activation"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "build:extension": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "start:dev": "pnpm run build && node dist/server.js",
+    "smoke:stdio": "node scripts/mcp-smoke-stdio.mjs",
+    "smoke:stdio:evidence": "node scripts/mcp-smoke-stdio.mjs --out docs/integrations/evidence/stdio-smoke-latest.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint --ext .ts src --report-unused-disable-directives",
+    "commit": "cz",
+    "prepare": "husky",
+    "release": "semantic-release",
+    "vscode:prepublish": "npm run build:extension",
+    "package:vsix": "vsce package",
+    "publish:vsce": "vsce publish"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.4.2",
+    "@commitlint/config-conventional": "^20.4.2",
+    "@types/node": "^24.3.0",
+    "@types/vscode": "^1.93.0",
+    "@typescript-eslint/eslint-plugin": "^8.56.1",
+    "@typescript-eslint/parser": "^8.56.1",
+    "commitizen": "^4.3.1",
+    "cz-conventional-changelog": "^3.3.0",
+    "eslint": "^8.50.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.8.1",
+    "semantic-release": "^25.0.3",
+    "typescript": "^5.9.2",
+    "vitest": "^4.0.18",
+    "vsce": "^2.15.0"
+  },
+  "dependencies": {
+    "node-firebird": "^2.0.2",
+    "zod": "^4.3.6"
+  },
+  "license": "BlueOak-1.0.0"
+}

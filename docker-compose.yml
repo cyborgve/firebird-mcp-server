@@ -1,0 +1,41 @@
+services:
+  firebird:
+    image: jacobalberty/firebird:5.0
+    container_name: fb-mcp-e2e
+    ports:
+      - "3050:3050"
+    environment:
+      FIREBIRD_DATABASE: test.fdb
+      FIREBIRD_USER: SYSDBA
+      FIREBIRD_PASSWORD: masterkey
+      FIREBIRD_CHARSET: UTF8
+      EnableLegacyClientAuth: "true"
+    volumes:
+      - fb-data:/firebird/data
+
+  smoke-test:
+    image: node:20-alpine
+    container_name: fb-mcp-smoke
+    depends_on:
+      firebird:
+        condition: service_started
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      FIREBIRD_HOST: firebird
+      FIREBIRD_PORT: 3050
+      FIREBIRD_DATABASE: /firebird/data/test.fdb
+      FIREBIRD_USER: SYSDBA
+      FIREBIRD_PASSWORD: masterkey
+    command: >
+      sh -c "
+        apk add --no-cache pnpm &&
+        pnpm install &&
+        pnpm run build &&
+        pnpm run test &&
+        pnpm run smoke:stdio
+      "
+
+volumes:
+  fb-data:
