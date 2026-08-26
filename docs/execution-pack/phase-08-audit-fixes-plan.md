@@ -18,7 +18,7 @@ Based on a comprehensive audit of the source code. Each item includes the file, 
 const SENSITIVE_KEY_PATTERN = /(password|secret|token|authorization|api[_-]?key|credential)/i;
 ```
 
-**Test:** `src/logging/logger.test.ts` must verify that `host`, `port`, and `database` are NOT redacted.
+**Test:** `src/logging/logger.test.ts` must verify that `host`, `port`, `database`, and `user` are NOT redacted.
 
 ---
 
@@ -80,7 +80,7 @@ export default {
 };
 ```
 
-**Test:** Run `pnpm commit` or `echo "test: foo" | pnpm commitlint`.
+**Test:** Run `pnpm commit` or `echo "test: foo" | pnpx commitlint`.
 
 ---
 
@@ -313,7 +313,7 @@ Update the `release` script in `package.json`.
 - [ ] `pnpm test` passes without errors (vitest)
 - [ ] `pnpm lint` passes without errors (ESLint)
 - [ ] `pnpm build` produces `dist/` without errors (TypeScript)
-- [ ] Logger does not redact host/port/database; it does redact password/token
+- [ ] Logger does not redact host/port/database/user; it does redact password/token
 - [ ] MCP protocol versions are `2025-03-26` and `2024-11-05`
 - [ ] `MCP_READ_ONLY` in environment is reflected in `RuntimeConfig`
 - [ ] `commitlint` works with `pnpm commit`
